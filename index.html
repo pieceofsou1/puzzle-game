@@ -12,8 +12,7 @@
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
-      margin: 0;
-      padding: 20px;
+      margin: 20px;
     }
     h1 {
       color: #d63384;
@@ -24,12 +23,12 @@
     }
     #difficulty-buttons button {
       background-color: #d63384;
-      color: white;
       border: none;
-      border-radius: 5px;
-      margin: 0 5px;
-      padding: 8px 16px;
+      color: white;
+      padding: 10px 18px;
+      margin: 0 8px;
       font-size: 16px;
+      border-radius: 5px;
       cursor: pointer;
       transition: background-color 0.3s;
     }
@@ -50,9 +49,11 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      border-radius: 5px;
       cursor: pointer;
+      border-radius: 5px;
       user-select: none;
+      width: 60px;
+      height: 60px;
       transition: background-color 0.2s;
     }
     .tile:hover {
@@ -62,7 +63,13 @@
       background-color: transparent;
       cursor: default;
     }
-    button#restart {
+    #steps {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #d63384;
+    }
+    #restart {
       background-color: #d63384;
       color: white;
       border: none;
@@ -73,13 +80,8 @@
       user-select: none;
       transition: background-color 0.3s;
     }
-    button#restart:hover {
+    #restart:hover {
       background-color: #ff69b4;
-    }
-    #steps {
-      font-weight: bold;
-      font-size: 18px;
-      margin-bottom: 20px;
     }
   </style>
 </head>
@@ -103,12 +105,12 @@
     const stepsDisplay = document.getElementById("steps");
     const difficultyButtons = document.querySelectorAll("#difficulty-buttons button");
 
-    let gridSize = 4;  // 默认中等4x4
+    let gridSize = 3;  // 默认简单3x3
     let tiles = [];
     let steps = 0;
 
     function setDifficulty(size, btn) {
-      if (gridSize === size) return;  // 不重复设置
+      if (gridSize === size) return;
       gridSize = size;
       steps = 0;
       updateActiveButton(btn);
@@ -131,7 +133,7 @@
       for (let i = 1; i < gridSize * gridSize; i++) {
         tiles.push(i);
       }
-      tiles.push(null);
+      tiles.push(null);  // 空格
     }
 
     function render() {
@@ -142,9 +144,6 @@
       tiles.forEach((num, i) => {
         const tile = document.createElement("div");
         tile.classList.add("tile");
-        tile.style.width = "60px";
-        tile.style.height = "60px";
-
         if (num === null) {
           tile.classList.add("empty");
         } else {
@@ -164,7 +163,6 @@
       const rowIndex = Math.floor(index / gridSize);
       const colIndex = index % gridSize;
 
-      // 判断空格是否和点击格子相邻（上下左右）
       const isAdjacent =
         (rowEmpty === rowIndex && Math.abs(colEmpty - colIndex) === 1) ||
         (colEmpty === colIndex && Math.abs(rowEmpty - rowIndex) === 1);
@@ -174,7 +172,7 @@
         steps++;
         render();
         if (isSolved()) {
-          setTimeout(() => alert(`你完成啦！🎉 总步数：${steps}`), 200);
+          setTimeout(() => alert(`你完成啦！🎉 总步数：${steps}`), 300);
         }
       }
     }
@@ -199,7 +197,7 @@
         }
       }
       const emptyRow = Math.floor(arr.indexOf(null) / gridSize);
-      // 3x3和5x5是奇数行列，偶数规则不同，4x4是偶数
+
       if (gridSize % 2 === 1) {
         return invCount % 2 === 0;
       } else {
@@ -214,7 +212,7 @@
       return true;
     }
 
-    // 页面初始化默认调用
+    // 初始化页面时调用
     initPuzzle();
   </script>
 </body>
