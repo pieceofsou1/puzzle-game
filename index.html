@@ -6,99 +6,118 @@
   <title>341的华容道挑战</title>
   <style>
     body {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-family: Arial, sans-serif;
+      background-color: #fff0f5;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       min-height: 100vh;
-      background-color: #faf9f6; /* 米白色背景 */
-      margin: 0;
-      padding: 20px;
+      margin: 20px;
     }
     h1 {
-      color: #ff8c94; /* 珊瑚粉 */
+      color: #d63384;
+    }
+    #difficultyButtons {
       margin-bottom: 20px;
+    }
+    #difficultyButtons button {
+      background-color: #d63384;
+      border: none;
+      color: white;
+      padding: 10px 18px;
+      margin: 0 8px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #difficultyButtons button:hover {
+      background-color: #b0296f;
     }
     #puzzle {
       display: grid;
-      grid-template-columns: repeat(4, 60px);
-      grid-template-rows: repeat(4, 60px);
-      gap: 8px;
+      gap: 5px;
+      margin-bottom: 15px;
     }
     .tile {
+      background-color: #ff69b4;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      border-radius: 5px;
+      user-select: none;
       width: 60px;
       height: 60px;
-      background-color: #ff8c94; /* 珊瑚粉 */
-      color: #ffffff; /* 白色文字 */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 8px;
-      user-select: none;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      transition: background-color 0.3s;
+      transition: background-color 0.2s;
     }
     .tile:hover {
-      background-color: #ff6376;
+      background-color: #e055a1;
     }
     .empty {
-      background-color: #e4e7da; /* 浅灰绿色空白格 */
+      background-color: transparent;
       cursor: default;
-      box-shadow: none;
     }
-    button {
-      margin-top: 25px;
-      padding: 12px 24px;
-      background-color: #6c63ff; /* 紫蓝色按钮 */
-      color: #ffffff;
+    #restartBtn {
+      background-color: #d63384;
       border: none;
-      border-radius: 6px;
-      font-size: 17px;
-      font-weight: 600;
+      color: white;
+      padding: 10px 25px;
+      font-size: 16px;
+      border-radius: 5px;
       cursor: pointer;
-      box-shadow: 0 3px 8px rgba(108, 99, 255, 0.5);
+      margin-bottom: 10px;
       transition: background-color 0.3s;
     }
-    button:hover {
-      background-color: #5752d6;
+    #restartBtn:hover {
+      background-color: #b0296f;
     }
-    p {
-      font-size: 16px;
-      margin-top: 15px;
-      color: #333333;
+    #stepsContainer {
+      font-size: 18px;
+      color: #d63384;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <h1>341的华容道挑战</h1>
+  <div id="difficultyButtons">
+    <button onclick="setSize(3)">3x3</button>
+    <button onclick="setSize(4)">4x4</button>
+    <button onclick="setSize(6)">6x6</button>
+  </div>
   <div id="puzzle"></div>
-  <p>步数：<span id="steps">0</span></p>
-  <button onclick="shuffle()">重新开始</button>
+  <div id="stepsContainer">步数: <span id="steps">0</span></div>
+  <button id="restartBtn" onclick="shuffle()">重新开始</button>
+
   <script>
-    const puzzle = document.getElementById("puzzle");
-    const stepsDisplay = document.getElementById("steps");
+    const puzzle = document.getElementById('puzzle');
+    const stepsDisplay = document.getElementById('steps');
+    let size = 4;  // 默认4x4
     let tiles = [];
     let steps = 0;
 
     function createTiles() {
       tiles = [];
-      for (let i = 1; i <= 15; i++) {
+      let total = size * size;
+      for (let i = 1; i < total; i++) {
         tiles.push(i);
       }
       tiles.push(null);
     }
 
     function render() {
-      puzzle.innerHTML = "";
+      puzzle.style.gridTemplateColumns = `repeat(${size}, 60px)`;
+      puzzle.style.gridTemplateRows = `repeat(${size}, 60px)`;
+      puzzle.innerHTML = '';
       tiles.forEach((num, i) => {
-        const tile = document.createElement("div");
-        tile.classList.add("tile");
+        const tile = document.createElement('div');
+        tile.classList.add('tile');
         if (num === null) {
-          tile.classList.add("empty");
+          tile.classList.add('empty');
         } else {
           tile.textContent = num;
           tile.onclick = () => move(i);
@@ -110,10 +129,16 @@
 
     function move(index) {
       const emptyIndex = tiles.indexOf(null);
-      const validMoves = [index - 1, index + 1, index - 4, index + 4];
-      if (validMoves.includes(emptyIndex) &&
-          !(index % 4 === 0 && emptyIndex === index - 1) &&
-          !(index % 4 === 3 && emptyIndex === index + 1)) {
+      const rowIndex = Math.floor(index / size);
+      const colIndex = index % size;
+      const emptyRow = Math.floor(emptyIndex / size);
+      const emptyCol = emptyIndex % size;
+
+      const isAdjacent =
+        (rowIndex === emptyRow && Math.abs(colIndex - emptyCol) === 1) ||
+        (colIndex === emptyCol && Math.abs(rowIndex - emptyRow) === 1);
+
+      if (isAdjacent) {
         [tiles[emptyIndex], tiles[index]] = [tiles[index], tiles[emptyIndex]];
         steps++;
         render();
@@ -125,35 +150,3 @@
 
     function shuffle() {
       do {
-        createTiles();
-        for (let i = tiles.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
-        }
-      } while (!isSolvable(tiles) || isSolved());
-      steps = 0;
-      render();
-    }
-
-    function isSolvable(arr) {
-      let invCount = 0;
-      for (let i = 0; i < 15; i++) {
-        for (let j = i + 1; j < 16; j++) {
-          if (arr[i] && arr[j] && arr[i] > arr[j]) invCount++;
-        }
-      }
-      const emptyRow = Math.floor(arr.indexOf(null) / 4);
-      return (invCount + emptyRow) % 2 === 0;
-    }
-
-    function isSolved() {
-      for (let i = 0; i < 15; i++) {
-        if (tiles[i] !== i + 1) return false;
-      }
-      return true;
-    }
-
-    shuffle();
-  </script>
-</body>
-</html>
