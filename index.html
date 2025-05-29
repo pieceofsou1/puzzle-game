@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>华容道挑战</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff0f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #d63384;
+      margin-bottom: 10px;
+    }
+    #difficulty-buttons {
+      margin-bottom: 15px;
+    }
+    #difficulty-buttons button {
+      background-color: #d63384;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin: 0 5px;
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #difficulty-buttons button:hover,
+    #difficulty-buttons button.active {
+      background-color: #ff69b4;
+    }
+    #puzzle {
+      display: grid;
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+    .tile {
+      background-color: #ff69b4;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 5px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s;
+    }
+    .tile:hover {
+      background-color: #d63384;
+    }
+    .empty {
+      background-color: transparent;
+      cursor: default;
+    }
+    button#restart {
+      background-color: #d63384;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s;
+    }
+    button#restart:hover {
+      background-color: #ff69b4;
+    }
+    #steps {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>华容道挑战</h1>
+
+  <div id="difficulty-buttons">
+    <button id="easy" class="active" onclick="setDifficulty(3, this)">简单</button>
+    <button id="medium" onclick="setDifficulty(4, this)">中等</button>
+    <button id="hard" onclick="setDifficulty(5, this)">困难</button>
+  </div>
+
+  <div id="puzzle"></div>
+
+  <div id="steps">步数: 0</div>
+
+  <button id="restart" onclick="shuffle()">重新开始</button>
+
+  <script>
+    const puzzle = document.getElementById("puzzle");
+    const stepsDisplay = document.getElementById("steps");
+    const difficultyButtons = document.querySelectorAll("#difficulty-buttons button");
+
+    let gridSize = 4;  // 默认中等4x4
+    let tiles = [];
+    let steps = 0;
+
+    function setDifficulty(size, btn) {
+      if (gridSize === size) return;  // 不重复设置
+      gridSize = size;
+      steps = 0;
+      updateActiveButton(btn);
+      initPuzzle();
+    }
+
+    function updateActiveButton(activeBtn) {
+      difficultyButtons.forEach(b => b.classList.remove("active"));
+      activeBtn.classList.add("active");
+    }
+
+    function initPuzzle() {
+      createTiles();
+      shuffle();
+      render();
+    }
+
+    function createTiles() {
+      tiles = [];
+      for (let i = 1; i < gridSize * gridSize; i++) {
+        tiles.push(i);
+      }
+      tiles.push(null);
+    }
+
+    function render() {
+      puzzle.innerHTML = "";
+      puzzle.style.gridTemplateColumns = `repeat(${gridSize}, 60px)`;
+      puzzle.style.gridTemplateRows = `repeat(${gridSize}, 60px)`;
+
+      tiles.forEach((num, i) => {
+        const tile = document.createElement("div");
+        tile.classList.add("tile");
+        tile.style.width = "60px";
+        tile.style.height = "60px";
+
+        if (num === null) {
+          tile.classList.add("empty");
+        } else {
+          tile.textContent = num;
+          tile.onclick = () => move(i);
+        }
+        puzzle.appendChild(tile);
+      });
+
+      stepsDisplay.textContent = `步数: ${steps}`;
+    }
+
+    function move(index) {
+      const emptyIndex = tiles.indexOf(null);
+      const rowEmpty = Math.floor(emptyIndex / gridSize);
+      const colEmpty = emptyIndex % gridSize;
+      const rowIndex = Math.floor(index / gridSize);
+      const colIndex = index % gridSize;
+
+      // 判断空格是否和点击格子相邻（上下左右）
+      const isAdjacent =
+        (rowEmpty === rowIndex && Math.abs(colEmpty - colIndex) === 1) ||
+        (colEmpty === colIndex && Math.abs(rowEmpty - rowIndex) === 1);
+
+      if (isAdjacent) {
+        [tiles[emptyIndex], tiles[index]] = [tiles[index], tiles[emptyIndex]];
+        steps++;
+        render();
+        if (isSolved()) {
+          setTimeout(() => alert(`你完成啦！🎉 总步数：${steps}`), 200);
+        }
+      }
+    }
+
+    function shuffle() {
+      do {
+        createTiles();
+        for (let i = tiles.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+        }
+      } while (!isSolvable(tiles) || isSolved());
+      steps = 0;
+      render();
+    }
+
+    function isSolvable(arr) {
+      let invCount = 0;
+      for (let i = 0; i < arr.length - 1; i++) {
+        for (let j = i + 1; j < arr.length; j++) {
+          if (arr[i] && arr[j] && arr[i] > arr[j]) invCount++;
+        }
+      }
+      const emptyRow = Math.floor(arr.indexOf(null) / gridSize);
+      // 3x3和5x5是奇数行列，偶数规则不同，4x4是偶数
+      if (gridSize % 2 === 1) {
+        return invCount % 2 === 0;
+      } else {
+        return (invCount + emptyRow) % 2 === 0;
+      }
+    }
+
+    function isSolved() {
+      for (let i = 0; i < tiles.length - 1; i++) {
+        if (tiles[i] !== i + 1) return false;
+      }
+      return true;
+    }
+
+    // 页面初始化默认调用
+    initPuzzle();
+  </script>
+</body>
+</html>
