@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>341的华容道挑战</title>
+  <style>
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-color: #faf9f6; /* 米白色背景 */
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #ff8c94; /* 珊瑚粉 */
+      margin-bottom: 20px;
+    }
+    #puzzle {
+      display: grid;
+      grid-template-columns: repeat(4, 60px);
+      grid-template-rows: repeat(4, 60px);
+      gap: 8px;
+    }
+    .tile {
+      width: 60px;
+      height: 60px;
+      background-color: #ff8c94; /* 珊瑚粉 */
+      color: #ffffff; /* 白色文字 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
+      user-select: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: background-color 0.3s;
+    }
+    .tile:hover {
+      background-color: #ff6376;
+    }
+    .empty {
+      background-color: #e4e7da; /* 浅灰绿色空白格 */
+      cursor: default;
+      box-shadow: none;
+    }
+    button {
+      margin-top: 25px;
+      padding: 12px 24px;
+      background-color: #6c63ff; /* 紫蓝色按钮 */
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(108, 99, 255, 0.5);
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #5752d6;
+    }
+    p {
+      font-size: 16px;
+      margin-top: 15px;
+      color: #333333;
+    }
+  </style>
+</head>
+<body>
+  <h1>341的华容道挑战</h1>
+  <div id="puzzle"></div>
+  <p>步数：<span id="steps">0</span></p>
+  <button onclick="shuffle()">重新开始</button>
+  <script>
+    const puzzle = document.getElementById("puzzle");
+    const stepsDisplay = document.getElementById("steps");
+    let tiles = [];
+    let steps = 0;
+
+    function createTiles() {
+      tiles = [];
+      for (let i = 1; i <= 15; i++) {
+        tiles.push(i);
+      }
+      tiles.push(null);
+    }
+
+    function render() {
+      puzzle.innerHTML = "";
+      tiles.forEach((num, i) => {
+        const tile = document.createElement("div");
+        tile.classList.add("tile");
+        if (num === null) {
+          tile.classList.add("empty");
+        } else {
+          tile.textContent = num;
+          tile.onclick = () => move(i);
+        }
+        puzzle.appendChild(tile);
+      });
+      stepsDisplay.textContent = steps;
+    }
+
+    function move(index) {
+      const emptyIndex = tiles.indexOf(null);
+      const validMoves = [index - 1, index + 1, index - 4, index + 4];
+      if (validMoves.includes(emptyIndex) &&
+          !(index % 4 === 0 && emptyIndex === index - 1) &&
+          !(index % 4 === 3 && emptyIndex === index + 1)) {
+        [tiles[emptyIndex], tiles[index]] = [tiles[index], tiles[emptyIndex]];
+        steps++;
+        render();
+        if (isSolved()) {
+          setTimeout(() => alert(`你完成啦！🎉 总步数：${steps}`), 300);
+        }
+      }
+    }
+
+    function shuffle() {
+      do {
+        createTiles();
+        for (let i = tiles.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+        }
+      } while (!isSolvable(tiles) || isSolved());
+      steps = 0;
+      render();
+    }
+
+    function isSolvable(arr) {
+      let invCount = 0;
+      for (let i = 0; i < 15; i++) {
+        for (let j = i + 1; j < 16; j++) {
+          if (arr[i] && arr[j] && arr[i] > arr[j]) invCount++;
+        }
+      }
+      const emptyRow = Math.floor(arr.indexOf(null) / 4);
+      return (invCount + emptyRow) % 2 === 0;
+    }
+
+    function isSolved() {
+      for (let i = 0; i < 15; i++) {
+        if (tiles[i] !== i + 1) return false;
+      }
+      return true;
+    }
+
+    shuffle();
+  </script>
+</body>
+</html>
